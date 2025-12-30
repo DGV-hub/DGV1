@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Authenticating...</title>
+</head>
+<body>
+<script>
+// 1. Parse the URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const code = urlParams.get('code');
+const telegramId = urlParams.get('state'); // Patreon sends back the ID in 'state'
+
+if (code && telegramId) {
+// 2. Redirect back to your Telegram bot
+// We pass the code and the ID so the bot knows who is who
+const botUsername = "YourBotUsername";
+window.location.href = `https://t.me/${botUsername}?start=auth_${code}_${telegramId}`;
+} else {
+document.body.innerHTML = "<h1>Authentication failed. Please try again from the bot.</h1>";
+}
+</script>
+</body>
+</html>
