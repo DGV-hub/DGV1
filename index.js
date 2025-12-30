@@ -1,3 +1,4 @@
+app = express();
 app.get("/auth/patreon", (req, res) => {
 // 1. Read Telegram ID from URL
 const tgId = req.query.tg_id;
