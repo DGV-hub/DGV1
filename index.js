@@ -1,46 +1,22 @@
-app.get("/auth/patreon/callback", async (req, res) => {
-const { code } = req.query;
+const tgId = req.query.state;
+app.get("/auth/patreon", (req, res) => {
+// 1. Read Telegram ID from URL
+const tgId = req.query.tg_id;
 
-try {
-const tokenRes = await axios.post(
-"https://www.patreon.com/api/oauth2/token",
-null,
-{
-params: {
-code,
-grant_type: "authorization_code",
-client_id: process.env.PATREON_CLIENT_ID,
-client_secret: process.env.PATREON_CLIENT_SECRET,
-redirect_uri: process.env.PATREON_REDIRECT_URI
-}
-}
-);
-
-const accessToken = tokenRes.data.access_token;
-
-const userRes = await axios.get(
-"https://www.patreon.com/api/oauth2/v2/identity?include=memberships",
-{
-headers: {
-Authorization: `Bearer ${accessToken}`
-}
-}
-);
-
-const memberships = userRes.data.included || [];
-
-const active = memberships.some(
-m => m.attributes?.currently_entitled_amount_cents > 0
-);
-
-if (!active) {
-return res.send("❌ You are not an active patron");
+// 2. Block access if Telegram ID is missing
+if (!tgId) {
+return res.send("❌ Telegram ID missing. Please start the Telegram bot first.");
 }
 
-res.send("✅ Patreon verified! You can now be added to Telegram.");
+// 3. Build Patreon OAuth URL with state = Telegram ID
+const patreonAuthUrl =
+"https://www.patreon.com/oauth2/authorize" +
+"?response_type=code" +
+`&client_id=${process.env.PATREON_CLIENT_ID}` +
+`&redirect_uri=${process.env.PATREON_REDIRECT_URI}` +
+"&scope=identity identity.memberships" +
+`&state=${tgId}`;
 
-} catch (err) {
-console.error(err.response?.data || err.message);
-res.send("Auth failed");
-}
+// 4. Redirect user to Patreon login
+res.redirect(patreonAuthUrl);
 });
